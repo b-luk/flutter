@@ -248,13 +248,14 @@ class TesterGLESDelegate : public GPUSurfaceGLDelegate {
     return context_ != EGL_NO_CONTEXT && surface_ != EGL_NO_SURFACE;
   }
 
+  bool IsContextCurrent() const { return ::eglGetCurrentContext() == context_; }
+
   // |GPUSurfaceGLDelegate|
   std::unique_ptr<GLContextResult> GLContextMakeCurrent() override {
     if (!IsValid()) {
       return std::make_unique<GLContextDefaultResult>(false);
     }
-    if (::eglGetCurrentContext() == context_) {
-      // Context is already current
+    if (IsContextCurrent()) {
       return std::make_unique<GLContextDefaultResult>(true);
     }
 
@@ -302,6 +303,9 @@ class TesterGLESWorker : public impeller::ReactorGLES::Worker {
 
   bool CanReactorReactOnCurrentThreadNow(
       const impeller::ReactorGLES& reactor) const override {
+    if (delegate_->IsContextCurrent()) {
+      return true;
+    }
     std::unique_ptr<GLContextResult> result = delegate_->GLContextMakeCurrent();
     if (!result->GetResult()) {
       return false;
