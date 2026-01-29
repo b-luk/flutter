@@ -816,6 +816,8 @@ def to_gn_args(args):
     # https://github.com/flutter/flutter/issues/114107
     if get_host_os() == 'win':
       gn_args['angle_force_context_check_every_call'] = True
+    if get_host_os() == 'mac':
+      gn_args['angle_enable_gl'] = False
 
     # ANGLE and SwiftShader share build flags to enable X11 and Wayland,
     # but we only need these enabled for SwiftShader.
