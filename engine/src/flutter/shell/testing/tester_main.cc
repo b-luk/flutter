@@ -64,7 +64,8 @@ std::unique_ptr<TesterContext> CreateTesterContext(const Settings& settings) {
 #endif
 #if TESTER_ENABLE_VULKAN
   if (settings.enable_impeller &&
-      settings.requested_rendering_backend == "vulkan") {
+      (settings.requested_rendering_backend->empty() ||
+       settings.requested_rendering_backend == "vulkan")) {
     tester_context =
         TesterContextVKFactory::Create(settings.enable_vulkan_validation);
   }
