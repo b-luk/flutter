@@ -931,7 +931,9 @@ def gather_dart_tests(
       cwd=dart_tests_dir,
   )
 
-  dart_vm_service_tests = glob.glob(f'{dart_tests_dir}/vm_service/*_test.dart')
+  dart_vm_service_tests = [] if 'release' in build_dir else glob.glob(
+      f'{dart_tests_dir}/vm_service/*_test.dart'
+  )
   dart_tests = glob.glob(f'{dart_tests_dir}/*_test.dart')
 
   opengles_skipped_tests = [
