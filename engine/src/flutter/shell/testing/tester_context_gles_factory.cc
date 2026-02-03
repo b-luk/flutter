@@ -176,7 +176,6 @@ class TesterGLESDelegate : public GPUSurfaceGLDelegate {
     display_ = CreateSwangleDisplay();
     if (display_ == EGL_NO_DISPLAY) {
       FML_LOG(ERROR) << "Could not create EGL display.";
-      // This will fail but it isn't necessary for the dart tests anyways.
       return;
     }
 
