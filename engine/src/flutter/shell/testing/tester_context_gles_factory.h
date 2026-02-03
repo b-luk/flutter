@@ -10,7 +10,7 @@
 
 // Impeller should only be enabled if the OpenGLES backend is enabled.
 #define TESTER_ENABLE_OPENGLES \
-  (IMPELLER_SUPPORTS_RENDERING && IMPELLER_ENABLE_OPENGLES)
+  (IMPELLER_SUPPORTS_RENDERING && IMPELLER_ENABLE_OPENGLES && SHELL_ENABLE_GL)
 
 namespace flutter {
 
