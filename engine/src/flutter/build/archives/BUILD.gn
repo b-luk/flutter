@@ -135,20 +135,6 @@ if (build_engine_artifacts) {
           destination = "frontend_server_aot.dart.snapshot"
         },
       ]
-
-      # On macOS, add the Vulkan Loader, which is needed for flutter_tester when
-      # using an OpenGLES impeller backend (which uses Vulkan through ANGLE and
-      # SwiftShader).
-      if (host_os == "mac") {
-        deps +=
-            [ "//flutter/third_party/vulkan-deps/vulkan-loader/src:libvulkan" ]
-        files += [
-          {
-            source = "$root_out_dir/${lib_prefix}vulkan$dll"
-            destination = "${lib_prefix}vulkan$dll"
-          },
-        ]
-      }
     }
 
     # On macOS, add entitlements.txt, which contains filenames of binaries that
