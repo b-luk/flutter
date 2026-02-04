@@ -217,6 +217,40 @@ if (is_mac || is_ios) {
   }
 }
 
+source_set("test_swiftshader_utils") {
+  sources = [
+    "test_swiftshader_utils.cc",
+    "test_swiftshader_utils.h",
+  ]
+
+  public_deps = [ "//flutter/fml" ]
+
+  public_configs = [ "//flutter:config" ]
+}
+
+source_set("test_swangle_utils") {
+  sources = [
+    "test_swangle_utils.cc",
+    "test_swangle_utils.h",
+  ]
+
+  public_deps = [
+    ":test_swiftshader_utils",
+    "//flutter/fml",
+    "//flutter/third_party/angle:libEGL_static",
+    "//flutter/third_party/angle:libGLESv2_static",
+    "//flutter/third_party/swiftshader",
+  ]
+
+  public_configs = [
+    "//flutter:config",
+    "//flutter/third_party/angle:external_config",
+    "//flutter/third_party/swiftshader:swiftshader_config",
+  ]
+
+  configs -= [ "//build/config/clang:extra_warnings" ]
+}
+
 # We only use SwiftShader on unittests
 use_swiftshader = enable_unittests && shell_enable_gl
 if (use_swiftshader) {
@@ -234,6 +268,7 @@ if (use_swiftshader) {
 
     deps = [
       ":skia",
+      ":test_swangle_utils",
       "//flutter/fml",
     ]
 
