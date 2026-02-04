@@ -6,7 +6,6 @@
 
 #include "flutter/shell/testing/tester_context_gles_factory.h"
 
-#define EGL_EGL_PROTOTYPES 1
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <EGL/eglplatform.h>
@@ -19,9 +18,10 @@
 #include "flutter/fml/make_copyable.h"
 #include "flutter/fml/mapping.h"
 #include "flutter/fml/message_loop.h"
-#include "flutter/fml/paths.h"
 #include "flutter/shell/gpu/gpu_surface_gl_delegate.h"
 #include "flutter/shell/gpu/gpu_surface_gl_impeller.h"
+#include "flutter/testing/test_swangle_utils.h"
+#include "flutter/testing/test_swiftshader_utils.h"
 #include "impeller/entity/gles/entity_shaders_gles.h"
 #include "impeller/entity/gles/framebuffer_blend_shaders_gles.h"
 #include "impeller/entity/gles/modern_shaders_gles.h"
@@ -31,124 +31,6 @@
 namespace flutter {
 
 namespace {
-
-static void FindSwiftShaderICDAtKnownPaths() {
-  static constexpr const char* kSwiftShaderICDJSON = "vk_swiftshader_icd.json";
-  static constexpr const char* kVulkanICDFileNamesEnvVariableKey =
-      "VK_ICD_FILENAMES";
-  const auto executable_directory_path =
-      fml::paths::GetExecutableDirectoryPath();
-  FML_CHECK(executable_directory_path.first);
-  auto icd_directory = executable_directory_path.second;
-  if (icd_directory.ends_with("exe.unstripped")) {
-    icd_directory = fml::paths::GetDirectoryName(icd_directory);
-  }
-  const auto icd_directory_fd = fml::OpenDirectory(icd_directory.c_str(), false,
-                                                   fml::FilePermission::kRead);
-  FML_CHECK(icd_directory_fd.is_valid());
-  if (fml::FileExists(icd_directory_fd, kSwiftShaderICDJSON)) {
-    const auto icd_path =
-        fml::paths::JoinPaths({icd_directory, kSwiftShaderICDJSON});
-#if FML_OS_WIN
-    const auto success =
-        ::SetEnvironmentVariableA(kVulkanICDFileNamesEnvVariableKey,  //
-                                  icd_path.c_str()                    //
-                                  ) != 0;
-#else   // FML_OS_WIN
-    const auto success = ::setenv(kVulkanICDFileNamesEnvVariableKey,  //
-                                  icd_path.c_str(),                   //
-                                  1  // overwrite
-                                  ) == 0;
-#endif  // FML_OS_WIN
-    FML_CHECK(success)
-        << "Could not set the environment variable to use SwiftShader.";
-  } else {
-    FML_CHECK(false)
-        << "Was asked to use SwiftShader but could not find the installable "
-           "client driver (ICD) for the locally built SwiftShader.";
-  }
-}
-
-void SetupSwiftshaderOnce(bool use_swiftshader) {
-  static bool swiftshader_preference = false;
-  static std::once_flag sOnceInitializer;
-  std::call_once(sOnceInitializer, [use_swiftshader]() {
-    if (use_swiftshader) {
-      FindSwiftShaderICDAtKnownPaths();
-      swiftshader_preference = use_swiftshader;
-    }
-  });
-  FML_CHECK(swiftshader_preference == use_swiftshader)
-      << "The option to use SwiftShader in a process can only be set once and "
-         "may not be changed later.";
-}
-
-bool HasExtension(const char* extensions, const char* name) {
-  const char* r = strstr(extensions, name);
-  auto len = strlen(name);
-  // check that the extension name is terminated by space or null terminator
-  return r != nullptr && (r[len] == ' ' || r[len] == 0);
-}
-
-EGLDisplay CreateSwangleDisplay() {
-  const char* extensions = ::eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
-  if (!extensions) {
-    // If we can't query extensions, we might be on a platform that doesn't
-    // support no-display queries, or EGL is just broken. Try default display as
-    // fallback? But we specifically want Swangle (SwiftShader/ANGLE).
-    return EGL_NO_DISPLAY;
-  }
-
-  // We expect EGL_EXT_platform_base for Swangle.
-  if (!HasExtension(extensions, "EGL_EXT_platform_base")) {
-    FML_LOG(ERROR) << "EGL_EXT_platform_base extension not available";
-    return EGL_NO_DISPLAY;
-  }
-
-  if (!HasExtension(extensions, "EGL_ANGLE_platform_angle_vulkan")) {
-    FML_LOG(ERROR) << "EGL_ANGLE_platform_angle_vulkan extension not available";
-    return EGL_NO_DISPLAY;
-  }
-
-  if (!HasExtension(extensions,
-                    "EGL_ANGLE_platform_angle_device_type_swiftshader")) {
-    FML_LOG(ERROR) << "EGL_ANGLE_platform_angle_device_type_swiftshader "
-                      "extension not available";
-    return EGL_NO_DISPLAY;
-  }
-
-  PFNEGLGETPLATFORMDISPLAYEXTPROC egl_get_platform_display_EXT =
-      reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(
-          eglGetProcAddress("eglGetPlatformDisplayEXT"));
-
-  if (!egl_get_platform_display_EXT) {
-    FML_LOG(ERROR) << "eglGetPlatformDisplayEXT not available.";
-    return EGL_NO_DISPLAY;
-  }
-
-  // Try SwiftShader first
-  const EGLint swiftshader_config[] = {
-      EGL_PLATFORM_ANGLE_TYPE_ANGLE,
-      EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE,
-      EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
-      EGL_PLATFORM_ANGLE_DEVICE_TYPE_SWIFTSHADER_ANGLE,
-      EGL_PLATFORM_ANGLE_NATIVE_PLATFORM_TYPE_ANGLE,
-      EGL_PLATFORM_VULKAN_DISPLAY_MODE_HEADLESS_ANGLE,
-      EGL_NONE,
-  };
-
-  EGLDisplay display = egl_get_platform_display_EXT(
-      EGL_PLATFORM_ANGLE_ANGLE,
-      reinterpret_cast<EGLNativeDisplayType*>(EGL_DEFAULT_DISPLAY),
-      swiftshader_config);
-
-  if (display != EGL_NO_DISPLAY) {
-    return display;
-  }
-
-  // Fallback?
-  return EGL_NO_DISPLAY;
-}
 
 class TesterGLContext : public SwitchableGLContext {
  public:
@@ -173,7 +55,7 @@ class TesterGLContext : public SwitchableGLContext {
 class TesterGLESDelegate : public GPUSurfaceGLDelegate {
  public:
   TesterGLESDelegate() {
-    display_ = CreateSwangleDisplay();
+    display_ = flutter::testing::CreateSwangleDisplay();
     if (display_ == EGL_NO_DISPLAY) {
       FML_LOG(ERROR) << "Could not create EGL display.";
       return;
@@ -410,7 +292,7 @@ class TesterContextGLES : public TesterContext {
 }  // namespace
 
 std::unique_ptr<TesterContext> TesterContextGLESFactory::Create() {
-  SetupSwiftshaderOnce(true);
+  flutter::testing::SetupSwiftshaderOnce(true);
   auto context = std::make_unique<TesterContextGLES>();
   if (!context->Initialize()) {
     FML_LOG(ERROR) << "Unable to create TesterContextGLESFactory";

@@ -115,17 +115,12 @@ tester("flutter_tester_opengles") {
   output_name = "flutter_tester_opengles"
 
   if (impeller_supports_rendering) {
-    configs = [
-      ":tester_opengles_gpu_configuration_config",
-      "//flutter/third_party/swiftshader:swiftshader_config",
-    ]
+    configs = [ ":tester_opengles_gpu_configuration_config" ]
     sources = [ "tester_context_gles_factory.cc" ]
     deps = [
       ":tester_opengles_gpu_configuration",
-      "//flutter/third_party/angle:libEGL_static",
-      "//flutter/third_party/angle:libGLESv2_static",
-      "//flutter/third_party/swiftshader",
-      "//flutter/vulkan/procs",
+      "//flutter/testing:test_swangle_utils",
+      "//flutter/testing:test_swiftshader_utils",
     ]
   }
 }
