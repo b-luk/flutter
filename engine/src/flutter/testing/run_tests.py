@@ -936,7 +936,7 @@ def gather_dart_tests(
   )
   dart_tests = glob.glob(f'{dart_tests_dir}/*_test.dart')
 
-  opengles_skipped_tests = [
+  linux_opengles_skipped_tests = [
       'assets_test.dart',
       'canvas_test.dart',
       'codec_test.dart',
@@ -976,7 +976,8 @@ def gather_dart_tests(
       _logger.info("Gathering dart test '%s'", dart_test_file)
 
     for impeller in impeller_backends:
-      if impeller == 'opengles' and dart_test_basename in opengles_skipped_tests:
+      if (impeller == 'opengles' and
+          is_linux()) and dart_test_basename in linux_opengles_skipped_tests:
         _logger.info("Skipping for opengles: '%s'", dart_test_file)
         continue
 
