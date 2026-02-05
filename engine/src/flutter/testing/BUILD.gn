@@ -217,36 +217,40 @@ if (is_mac || is_ios) {
   }
 }
 
-source_set("test_swiftshader_utils") {
-  sources = [
-    "test_swiftshader_utils.cc",
-    "test_swiftshader_utils.h",
-  ]
-
-  configs += [ "//flutter/third_party/swiftshader:swiftshader_config" ]
-
-  deps = [
-    "//flutter/fml",
-    "//flutter/third_party/swiftshader",
-  ]
-}
-
-# We only use SwiftShader on unittests
-use_swiftshader = enable_unittests && (shell_enable_gl || is_mac)
-if (use_swiftshader) {
-  source_set("test_swangle_utils") {
+if (enable_unittests) {
+  source_set("test_swiftshader_utils") {
     sources = [
-      "test_swangle_utils.cc",
-      "test_swangle_utils.h",
+      "test_swiftshader_utils.cc",
+      "test_swiftshader_utils.h",
     ]
+
+    configs += [ "//flutter/third_party/swiftshader:swiftshader_config" ]
 
     deps = [
       "//flutter/fml",
-      "//flutter/third_party/angle:libEGL_static",
-      "//flutter/third_party/angle:libGLESv2_static",
+      "//flutter/third_party/swiftshader",
     ]
   }
 
+  if (!is_fuchsia) {
+    source_set("test_swangle_utils") {
+      sources = [
+        "test_swangle_utils.cc",
+        "test_swangle_utils.h",
+      ]
+
+      deps = [
+        "//flutter/fml",
+        "//flutter/third_party/angle:libEGL_static",
+        "//flutter/third_party/angle:libGLESv2_static",
+      ]
+    }
+  }
+}
+
+# We only use SwiftShader on unittests
+use_swiftshader = enable_unittests && shell_enable_gl
+if (use_swiftshader) {
   source_set("opengl") {
     testonly = true
 
