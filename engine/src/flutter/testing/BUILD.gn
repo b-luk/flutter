@@ -240,8 +240,10 @@ if (current_toolchain == host_toolchain) {
       "test_swangle_utils.h",
     ]
 
-    deps = [
-      "//flutter/fml",
+    public_configs = [ "//flutter/third_party/angle:external_config" ]
+
+    deps = [ "//flutter/fml" ]
+    public_deps = [
       "//flutter/third_party/angle:libEGL_static",
       "//flutter/third_party/angle:libGLESv2_static",
     ]
