@@ -217,7 +217,7 @@ if (is_mac || is_ios) {
   }
 }
 
-if (enable_unittests) {
+if (!is_ios) {
   source_set("test_swiftshader_utils") {
     sources = [
       "test_swiftshader_utils.cc",
@@ -231,20 +231,20 @@ if (enable_unittests) {
       "//flutter/third_party/swiftshader",
     ]
   }
+}
 
-  if (!is_fuchsia) {
-    source_set("test_swangle_utils") {
-      sources = [
-        "test_swangle_utils.cc",
-        "test_swangle_utils.h",
-      ]
+if (current_toolchain == host_toolchain) {
+  source_set("test_swangle_utils") {
+    sources = [
+      "test_swangle_utils.cc",
+      "test_swangle_utils.h",
+    ]
 
-      deps = [
-        "//flutter/fml",
-        "//flutter/third_party/angle:libEGL_static",
-        "//flutter/third_party/angle:libGLESv2_static",
-      ]
-    }
+    deps = [
+      "//flutter/fml",
+      "//flutter/third_party/angle:libEGL_static",
+      "//flutter/third_party/angle:libGLESv2_static",
+    ]
   }
 }
 
