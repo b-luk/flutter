@@ -231,22 +231,22 @@ source_set("test_swiftshader_utils") {
   ]
 }
 
-source_set("test_swangle_utils") {
-  sources = [
-    "test_swangle_utils.cc",
-    "test_swangle_utils.h",
-  ]
-
-  deps = [
-    "//flutter/fml",
-    "//flutter/third_party/angle:libEGL_static",
-    "//flutter/third_party/angle:libGLESv2_static",
-  ]
-}
-
 # We only use SwiftShader on unittests
-use_swiftshader = enable_unittests && shell_enable_gl
+use_swiftshader = enable_unittests && (shell_enable_gl || is_mac)
 if (use_swiftshader) {
+  source_set("test_swangle_utils") {
+    sources = [
+      "test_swangle_utils.cc",
+      "test_swangle_utils.h",
+    ]
+
+    deps = [
+      "//flutter/fml",
+      "//flutter/third_party/angle:libEGL_static",
+      "//flutter/third_party/angle:libGLESv2_static",
+    ]
+  }
+
   source_set("opengl") {
     testonly = true
 
