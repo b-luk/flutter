@@ -43,7 +43,6 @@
                     "language": "python3",
                     "name": "Host Tests for host_debug",
                     "script": "flutter/testing/run_tests.py",
-                    "test_timeout_secs": 3600,
                     "parameters": [
                         "--variant",
                         "ci/host_debug_arm64_tests",
@@ -95,7 +94,6 @@
                     "language": "python3",
                     "name": "Host Tests for host_profile",
                     "script": "flutter/testing/run_tests.py",
-                    "test_timeout_secs": 3600,
                     "parameters": [
                         "--variant",
                         "ci/host_profile_arm64_tests",
@@ -148,7 +146,6 @@
                     "language": "python3",
                     "name": "Dart and engine tests for host_release",
                     "script": "flutter/testing/run_tests.py",
-                    "test_timeout_secs": 3600,
                     "parameters": [
                         "--variant",
                         "ci/host_release_arm64_tests",
@@ -375,7 +372,7 @@
                     "language": "python3",
                     "name": "Host Tests for host_debug_unopt_arm64",
                     "script": "flutter/testing/run_tests.py",
-                    "test_timeout_secs": 7200,
+                    "test_timeout_secs": 3600,
                     "parameters": [
                         "--variant",
                         "ci/host_debug_unopt_arm64",
@@ -390,8 +387,7 @@
                     "language": "python3",
                     "script": "flutter/tools/gn_test.py"
                 }
-            ],
-            "timeout": 120
+            ]
         },
         {
             "cas_archive": false,
