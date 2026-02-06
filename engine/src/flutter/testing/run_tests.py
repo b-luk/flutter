@@ -936,33 +936,15 @@ def gather_dart_tests(
   )
   dart_tests = glob.glob(f'{dart_tests_dir}/*_test.dart')
 
-  mac_opengles_skipped_tests = [
-      'fragment_shader_test.dart',
-      'gpu_test.dart',
-      'high_bitrate_texture_test.dart',
-  ]
-
-  linux_opengles_skipped_tests = [
-      'assets_test.dart',
-      'canvas_test.dart',
+  opengles_skipped_tests = [
       'codec_test.dart',
-      'color_filter_test.dart',
-      'compositing_test.dart',
       'decode_image_from_pixels_sync_test.dart',
       'encoding_test.dart',
       'fragment_shader_test.dart',
       'gpu_test.dart',
       'high_bitrate_texture_test.dart',
       'image_dispose_test.dart',
-      'image_events_test.dart',
-      'image_filter_test.dart',
       'image_resize_test.dart',
-      'image_shader_test.dart',
-      'image_test.dart',
-      'mask_filter_test.dart',
-      'painting_test.dart',
-      'text_test.dart',
-      'tracing_test.dart',
   ]
 
   impeller_backends = ['', 'vulkan', 'opengles']
@@ -982,9 +964,7 @@ def gather_dart_tests(
       _logger.info("Gathering dart test '%s'", dart_test_file)
 
     for impeller in impeller_backends:
-      if impeller == 'opengles' and (
-          (is_mac() and dart_test_basename in mac_opengles_skipped_tests) or
-          (is_linux() and dart_test_basename in linux_opengles_skipped_tests)):
+      if impeller == 'opengles' and dart_test_basename in opengles_skipped_tests:
         _logger.info("Skipping for opengles: '%s'", dart_test_file)
         continue
 
