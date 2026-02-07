@@ -122,6 +122,7 @@ if (current_toolchain == host_toolchain) {
         ":tester_opengles_gpu_configuration",
         "//flutter/testing:test_swangle_utils",
         "//flutter/testing:test_swiftshader_utils",
+        "//third_party/abseil-cpp/absl/status:statusor",
       ]
     }
   }
