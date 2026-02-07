@@ -111,16 +111,14 @@ class TesterGLESDelegate : public GPUSurfaceGLDelegate {
       return absl::InternalError("Could not create EGL pbuffer surface.");
     }
 
-    return TesterGLESDelegate(display, config, context, surface);
+    return TesterGLESDelegate(display, context, surface);
   }
 
   TesterGLESDelegate(TesterGLESDelegate&& other)
       : display_(other.display_),
-        config_(other.config_),
         context_(other.context_),
         surface_(other.surface_) {
     other.display_ = EGL_NO_DISPLAY;
-    other.config_ = nullptr;
     other.context_ = EGL_NO_CONTEXT;
     other.surface_ = EGL_NO_SURFACE;
   }
@@ -174,17 +172,10 @@ class TesterGLESDelegate : public GPUSurfaceGLDelegate {
   }
 
  private:
-  TesterGLESDelegate(EGLDisplay display,
-                     EGLConfig config,
-                     EGLContext context,
-                     EGLSurface surface)
-      : display_(display),
-        config_(config),
-        context_(context),
-        surface_(surface) {}
+  TesterGLESDelegate(EGLDisplay display, EGLContext context, EGLSurface surface)
+      : display_(display), context_(context), surface_(surface) {}
 
   EGLDisplay display_ = EGL_NO_DISPLAY;
-  EGLConfig config_ = nullptr;
   EGLContext context_ = EGL_NO_CONTEXT;
   EGLSurface surface_ = EGL_NO_SURFACE;
 
