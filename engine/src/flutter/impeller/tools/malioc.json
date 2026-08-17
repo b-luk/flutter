@@ -8600,18 +8600,18 @@
       "uses_late_zs_update": false,
       "variants": {
         "Main": {
-          "fp16_arithmetic": 31,
+          "fp16_arithmetic": 43,
           "has_stack_spilling": false,
           "performance": {
             "longest_path_bound_pipelines": [
               "arith_total",
-              "arith_sfu"
+              "arith_fma"
             ],
             "longest_path_cycles": [
-              4.1875,
-              4.125,
-              2.125,
-              4.1875,
+              2.96875,
+              2.96875,
+              0.90625,
+              2.0625,
               0.0,
               0.25,
               0.25
@@ -8632,7 +8632,7 @@
             "shortest_path_cycles": [
               0.578125,
               0.578125,
-              0.234375,
+              0.25,
               0.5,
               0.0,
               0.25,
@@ -8643,10 +8643,10 @@
               "arith_fma"
             ],
             "total_cycles": [
-              14.0625,
-              14.0625,
-              5.574999809265137,
-              13.75,
+              7.625,
+              7.625,
+              2.637500047683716,
+              6.75,
               0.0,
               0.25,
               0.5
@@ -8654,7 +8654,7 @@
           },
           "stack_spill_bytes": 0,
           "thread_occupancy": 100,
-          "uniform_registers_used": 62,
+          "uniform_registers_used": 42,
           "work_registers_used": 32
         }
       }
@@ -8666,14 +8666,14 @@
       "type": "Fragment",
       "variants": {
         "Main": {
-          "has_stack_spilling": true,
+          "has_stack_spilling": false,
           "performance": {
             "longest_path_bound_pipelines": [
               "arithmetic"
             ],
             "longest_path_cycles": [
-              51.47999954223633,
-              6.0,
+              32.0099983215332,
+              1.0,
               5.0
             ],
             "pipelines": [
@@ -8686,21 +8686,21 @@
             ],
             "shortest_path_cycles": [
               6.599999904632568,
-              3.0,
+              1.0,
               2.0
             ],
             "total_bound_pipelines": [
               "arithmetic"
             ],
             "total_cycles": [
-              121.0,
-              7.0,
-              26.0
+              77.0,
+              1.0,
+              22.0
             ]
           },
           "thread_occupancy": 100,
-          "uniform_registers_used": 9,
-          "work_registers_used": 4
+          "uniform_registers_used": 8,
+          "work_registers_used": 3
         }
       }
     }
@@ -11827,18 +11827,18 @@
       "uses_late_zs_update": false,
       "variants": {
         "Main": {
-          "fp16_arithmetic": 34,
+          "fp16_arithmetic": 43,
           "has_stack_spilling": false,
           "performance": {
             "longest_path_bound_pipelines": [
               "arith_total",
-              "arith_sfu"
+              "arith_fma"
             ],
             "longest_path_cycles": [
-              4.125,
-              3.65625,
-              2.28125,
-              4.125,
+              2.862499952316284,
+              2.862499952316284,
+              0.78125,
+              2.0,
               0.0,
               0.25,
               0.25
@@ -11860,7 +11860,7 @@
             "shortest_path_cycles": [
               0.5,
               0.5,
-              0.25,
+              0.265625,
               0.5,
               0.0,
               0.25,
@@ -11868,13 +11868,13 @@
             ],
             "total_bound_pipelines": [
               "arith_total",
-              "arith_sfu"
+              "arith_fma"
             ],
             "total_cycles": [
-              13.625,
-              12.875,
-              5.625,
-              13.625,
+              7.125,
+              7.125,
+              2.09375,
+              6.625,
               0.0,
               0.25,
               0.5
@@ -11882,7 +11882,7 @@
           },
           "stack_spill_bytes": 0,
           "thread_occupancy": 100,
-          "uniform_registers_used": 66,
+          "uniform_registers_used": 42,
           "work_registers_used": 32
         }
       }

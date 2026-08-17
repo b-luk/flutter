@@ -9,7 +9,6 @@ precision mediump float;
 #include <impeller/texture.glsl>
 #include <impeller/types.glsl>
 
-#include "sdf_functions.glsl"
 #include "sdf_utils.glsl"
 
 uniform sampler2D color_source_sampler;
@@ -25,7 +24,7 @@ uniform FragInfo {
   /// The RGBA color of the shape (or paint opacity in color.a for gradients).
   vec4 color;
   /// Corner radii for rounded rects (top-left, top-right, bottom-left,
-  /// bottom-right) or rounded superellipses (xy).
+  /// bottom-right).
   vec4 radii;
 
   // ===========================================================================
@@ -37,24 +36,6 @@ uniform FragInfo {
   vec2 center;
   /// The half-dimensions of the shape (half-width, half-height).
   vec2 size;
-
-  // --- Superellipse Parameters ---
-  /// The exponent degree (n_x, n_y) of the superellipse curvature.
-  vec2 superellipse_degree;
-  /// The semi-axis lengths (a, b) of the superellipse.
-  vec2 superellipse_semi_axis;
-  /// Normalization scale factor mapping the superellipse quadrant to a unit
-  /// square.
-  vec2 superellipse_scale;
-  /// The angular span of the corner circular arc transitions for rounded
-  /// superellipses.
-  vec2 angle_span;
-  /// The center of the corner transition circle for the top octant of a
-  /// rounded superellipse.
-  vec2 circle_center_top;
-  /// The center of the corner transition circle for the right octant of a
-  /// rounded superellipse.
-  vec2 circle_center_right;
 
   // --- Gradient Parameters ---
   /// The starting point of a linear gradient, or the center point of a radial
@@ -77,7 +58,6 @@ uniform FragInfo {
   ///   1: Rect
   ///   2: Oval
   ///   3: RoundRect
-  ///   4: Superellipse
   float type;
   /// The type of color source:
   ///   0: Solid color
@@ -97,11 +77,6 @@ uniform FragInfo {
   ///   1: Bevel
   ///   2: Round
   float stroke_join;
-
-  // --- Superellipse Parameters ---
-  /// Transition line offset dividing top and right octants for rounded
-  /// superellipses.
-  float octant_offset_c;
 
   // --- Gradient Parameters ---
   /// The tile mode for gradient sampling:
@@ -178,69 +153,6 @@ float distanceFromChamferRect(vec2 p, vec2 half_size, float chamfer_size) {
   return max(d1, d2);
 }
 
-float distanceFromRoundedSuperellipse(vec2 p,
-                                      vec2 degree,
-                                      vec2 se_a,
-                                      vec2 radii,
-                                      vec2 angle_span,
-                                      vec2 circle_center_top,
-                                      vec2 circle_center_right,
-                                      float c,
-                                      vec2 scale) {
-  // Do work in the first quadrant to simply things.
-  p = abs(p);
-  // Map p in to a square.
-  vec2 p_norm = p / scale;
-
-  // Declare all RSE params for a single octant.
-  float se_degree, span, radius, axis_length;
-  vec2 circle_center;
-
-  // 'p' in the coordinate system of the octant.
-  vec2 p_oct;
-
-  // We split the quadrant along the diagonal of the transition (p_norm.y + c ==
-  // p_norm.x). This allows us to grab the correct set of parameters for the
-  // "top" and "right" halves of the corner.
-  if (p_norm.y + c > p_norm.x) {
-    p_oct = p_norm + vec2(0.0, c);
-    se_degree = degree.x;
-    span = angle_span.x;
-    radius = radii.x;
-    circle_center = circle_center_top;
-    axis_length = se_a.x;
-  } else {
-    // For the 'right' octant, we flip the point and shift it according to
-    // the CPU's OctantContains/Flip logic.
-    p_oct = p_norm.yx - vec2(0.0, c);
-    se_degree = degree.y;
-    span = angle_span.y;
-    radius = radii.y;
-    circle_center = circle_center_right;
-    axis_length = se_a.y;
-  }
-
-  // Move the point to the corner circle's coordinate system.
-  vec2 p_rel = p_oct - circle_center;
-
-  // Grab the angle offset of the point.
-  float theta = atan(p_rel.y, p_rel.x);
-
-  // The angular distance between the point and the 45 degree midline.
-  float d_theta = theta - PI_OVER_FOUR;
-  d_theta = mod(d_theta + PI, TWO_PI) - PI;
-
-  // If the point is within the span of the corner circle's arc,
-  // use a circle SDF.
-  // This works because the normals of the circular and superelliptical sections
-  // agree at the transition angle, the total RSE curve is continuous and
-  // the closest point on a continuous curve to a point lies along the normal.
-  if (abs(d_theta) < abs(span)) {
-    return distanceFromCircle(p_rel, radius);
-  }
-  return sdSuperellipse(p_oct / axis_length, se_degree) * axis_length;
-}
-
 // Special case pixel size calculation for rectangles. The standard `pixelSize`
 // function uses SDF derivatives, which gives invalid results for very small
 // shapes, where adjacent device pixels span across opposing edges of the shape.
@@ -314,17 +226,10 @@ vec2 filledSDF(vec2 p) {
   } else if (frag_info.type < 2.5) {  // Oval
     sdf = distanceFromOval(p, frag_info.size);
     pixel_size = pixelSize(sdf);
-  } else if (frag_info.type < 3.5) {  // Rounded Rect
+  } else {  // Rounded Rect
     sdf = distanceFromRoundedRect(p, frag_info.size, frag_info.radii);
     // RoundRect has its own separate logic for calculating pixel size.
     pixel_size = roundRectPixelSize(p);
-  } else {  // Symmetric Rounded Superellipse
-    sdf = distanceFromRoundedSuperellipse(
-        p, frag_info.superellipse_degree, frag_info.superellipse_semi_axis,
-        frag_info.radii.xy, frag_info.angle_span, frag_info.circle_center_top,
-        frag_info.circle_center_right, frag_info.octant_offset_c,
-        frag_info.superellipse_scale);
-    pixel_size = pixelSize(sdf);
   }
   return vec2(sdf, pixel_size);
 }
