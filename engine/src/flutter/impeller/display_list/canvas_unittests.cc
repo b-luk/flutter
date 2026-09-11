@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "flutter/display_list/dl_tile_mode.h"
 #include "flutter/display_list/effects/dl_image_filter.h"
+#include "flutter/display_list/effects/image_filters/dl_blur_image_filter.h"
 #include "flutter/display_list/geometry/dl_geometry_types.h"
 #include "flutter/testing/testing.h"
 #include "gtest/gtest.h"
@@ -15,6 +16,7 @@
 #include "impeller/display_list/dl_image_impeller.h"
 #include "impeller/display_list/dl_runtime_effect_impeller.h"
 #include "impeller/display_list/dl_vertices_geometry.h"
+#include "impeller/entity/render_target_cache.h"
 #include "impeller/geometry/geometry_asserts.h"
 #include "impeller/playground/playground.h"
 #include "impeller/playground/widgets.h"
@@ -584,6 +586,43 @@ TEST_P(AiksTest, BlendModeCompatibilityWithSDFRendering) {
               Canvas::IsCompatibleWithSDFRendering(paint))
         << "Failure for BlendMode: " << BlendModeToString(blend_mode);
   }
+}
+
+TEST_P(AiksTest, SaveLayerBackdropFilterDisablesMSAA) {
+  ContentContext& context = GetContentContext();
+  if (!context.GetContext()->GetCapabilities()->SupportsOffscreenMSAA()) {
+    GTEST_SKIP() << "Offscreen MSAA is not supported on this device.";
+  }
+
+  auto canvas = CreateTestCanvas(context);
+  auto cache = std::static_pointer_cast<RenderTargetCache>(
+      context.GetRenderTargetCache());
+  ASSERT_NE(cache, nullptr);
+
+  // A normal saveLayer has MSAA enabled.
+  canvas->SaveLayer(Paint{}, Rect::MakeLTRB(0, 0, 50, 50),
+                    /*backdrop_filter=*/nullptr,
+                    ContentBoundsPromise::kContainsContents,
+                    /*total_content_depth=*/1);
+  auto it_msaa = std::find_if(
+      cache->GetRenderTargetDataBegin(), cache->GetRenderTargetDataEnd(),
+      [](const auto& data) { return data.config.size == ISize(50, 50); });
+  ASSERT_NE(it_msaa, cache->GetRenderTargetDataEnd());
+  EXPECT_TRUE(it_msaa->config.has_msaa);
+  canvas->Restore();
+
+  // A saveLayer hosting a backdrop filter has MSAA disabled.
+  auto blur =
+      flutter::DlImageFilter::MakeBlur(4, 4, flutter::DlTileMode::kClamp);
+  canvas->SaveLayer(Paint{}, Rect::MakeLTRB(0, 0, 60, 60), blur.get(),
+                    ContentBoundsPromise::kContainsContents,
+                    /*total_content_depth=*/1);
+  auto it_no_msaa = std::find_if(
+      cache->GetRenderTargetDataBegin(), cache->GetRenderTargetDataEnd(),
+      [](const auto& data) { return data.config.size == ISize(100, 100); });
+  ASSERT_NE(it_no_msaa, cache->GetRenderTargetDataEnd());
+  EXPECT_FALSE(it_no_msaa->config.has_msaa);
+  canvas->Restore();
 }
 
 TEST(CanvasTest, NonAntialiasedPaintIncompatibleWithSDFRendering) {

@@ -190,7 +190,8 @@ static const constexpr RenderTarget::AttachmentConfig kDefaultStencilConfig =
 static std::unique_ptr<EntityPassTarget> CreateRenderTarget(
     ContentContext& renderer,
     ISize size,
-    const Color& clear_color) {
+    const Color& clear_color,
+    bool enable_msaa = true) {
   const std::shared_ptr<Context>& context = renderer.GetContext();
 
   /// All of the load/store actions are managed by `InlinePassContext` when
@@ -199,7 +200,7 @@ static std::unique_ptr<EntityPassTarget> CreateRenderTarget(
   /// changed for the lifetime of the textures.
 
   RenderTarget target;
-  if (context->GetCapabilities()->SupportsOffscreenMSAA()) {
+  if (enable_msaa && context->GetCapabilities()->SupportsOffscreenMSAA()) {
     target = renderer.GetRenderTargetCache()->CreateOffscreenMSAA(
         /*context=*/*context,
         /*size=*/size,
@@ -2017,12 +2018,13 @@ void Canvas::SaveLayer(const Paint& paint,
   paint_copy.color.alpha *= transform_stack_.back().distributed_opacity;
   transform_stack_.back().distributed_opacity = 1.0;
 
-  render_passes_.push_back(
-      LazyRenderingConfig(renderer_,                                    //
-                          CreateRenderTarget(renderer_,                 //
-                                             subpass_size,              //
-                                             Color::BlackTransparent()  //
-                                             )));
+  render_passes_.push_back(LazyRenderingConfig(
+      renderer_,                                           //
+      CreateRenderTarget(renderer_,                        //
+                         subpass_size,                     //
+                         Color::BlackTransparent(),        //
+                         /*enable_msaa=*/!backdrop_filter  //
+                         )));
   save_layer_state_.push_back(SaveLayerState{
       paint_copy, subpass_coverage.Shift(-coverage_origin_adjustment)});
 
